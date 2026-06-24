@@ -78,22 +78,44 @@ Roberto_Tinoco_DR4_AT/
 | Routing Key — Almoxarifado | `pedido.em-preparacao` |
 | Routing Key — Transporte | `pedido.entrega-solicitada` |
 
-## Instruções de Build e Testes
+## Instruções para Execução e Validação
 
-Os microsserviços são independentes entre si e não requerem contêineres Docker nem servidor RabbitMQ ativo para compilação e execução dos testes. O banco de dados H2 é inicializado automaticamente em memória pela própria aplicação Spring Boot.
+Para rodar o projeto em um ambiente local com RabbitMQ ativo e validar a comunicação assíncrona, siga os passos abaixo:
 
-Para compilar e testar cada microsserviço, execute os comandos abaixo a partir da raiz do respectivo módulo:
-
+### 1. Subir o RabbitMQ
+Certifique-se de ter um servidor RabbitMQ rodando na porta padrão (`5672`). Você pode usar Docker:
 ```bash
-# Almoxarifado
-cd PetFriends_Almoxarifado
-mvn clean package
-mvn test
-
-# Transporte
-cd PetFriends_Transporte
-mvn clean package
-mvn test
+docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
 ```
 
-> **Observação técnica:** A propriedade `spring.rabbitmq.listener.simple.auto-startup=false` está definida no `application.properties` de ambos os microsserviços. Essa configuração impede que o listener tente se conectar ao broker RabbitMQ durante a inicialização, permitindo que o ciclo de build e os testes sejam executados em ambientes sem o broker disponível. Os testes validam a lógica de negócio chamando os serviços diretamente, sem passar pela camada de mensageria.
+### 2. Iniciar os Microsserviços
+Você pode rodar as aplicações diretamente pelo IntelliJ IDEA (executando as classes principais) ou via Maven. Cada microsserviço rodará em uma porta diferente:
+
+* **PetFriends_Pedidos** (Publisher - Porta `8080`):
+  Execute a classe `PedidosApplication.java`.
+* **PetFriends_Almoxarifado** (Consumer - Porta `8081`):
+  Execute a classe `AlmoxarifadoApplication.java`.
+* **PetFriends_Transporte** (Consumer - Porta `8082`):
+  Execute a classe `TransporteApplication.java`.
+
+### 3. Realizar a Validação (via IntelliJ HTTP Client)
+Na raiz do projeto existe um arquivo chamado `petfriends-requests.http`. Abra ele no IntelliJ e clique no botão verde de play ao lado de cada requisição para enviar os comandos:
+
+1. **Disparar evento "Pedido Em Preparação":**
+   Execute o `POST http://localhost:8080/pedidos/publicar-em-preparacao`
+   Isso fará o microsserviço de Pedidos enviar uma mensagem JSON para o RabbitMQ.
+   
+2. **Validar no Almoxarifado:**
+   Execute o `GET http://localhost:8081/almoxarifado/ordens-separacao`
+   O microsserviço de Almoxarifado interceptará a mensagem e salvará no banco de dados. O GET listará a Ordem de Separação criada.
+
+3. **Disparar evento "Entrega Solicitada":**
+   Execute o `POST http://localhost:8080/pedidos/publicar-entrega-solicitada`
+   Isso publicará a mensagem de entrega no RabbitMQ.
+
+4. **Validar no Transporte:**
+   Execute o `GET http://localhost:8082/transporte/entregas`
+   O microsserviço de Transporte interceptará a mensagem, criará a Entrega no banco e ela será listada na requisição.
+
+> **Observação técnica sobre a serialização:** 
+> Para garantir independência entre os contextos delimitados (evitando acoplamento de classes e `ClassCastException`), os eventos são publicados pelo microsserviço de Pedidos como **JSON Strings**. Os consumers do Almoxarifado e do Transporte recebem o texto JSON e realizam o *parsing* (usando Jackson `ObjectMapper`) diretamente para os seus próprios DTOs locais correspondentes, atestando o isolamento dos microsserviços.

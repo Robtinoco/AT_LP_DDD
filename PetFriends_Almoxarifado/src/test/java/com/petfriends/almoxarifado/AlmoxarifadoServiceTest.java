@@ -1,5 +1,6 @@
 package com.petfriends.almoxarifado;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.petfriends.almoxarifado.domain.*;
 import com.petfriends.almoxarifado.infra.*;
 import org.junit.jupiter.api.Test;
@@ -20,8 +21,11 @@ class AlmoxarifadoServiceTest {
     @Autowired
     private OrdemSeparacaoRepository repository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
-    void processarEventoPedidoEmPreparacaoTest() {
+    void processarEventoPedidoEmPreparacaoTest() throws Exception {
         PedidoEmPreparacaoEvent event = new PedidoEmPreparacaoEvent();
         event.setEventId("evt-123");
         event.setCorrelationId("corr-123");
@@ -36,8 +40,8 @@ class AlmoxarifadoServiceTest {
         item.setQuantidade(2);
         event.setItens(List.of(item));
 
-        // Chama o consumer diretamente (bypass RabbitMQ)
-        consumer.handle(event);
+        String json = objectMapper.writeValueAsString(event);
+        consumer.handle(json);
 
         List<OrdemSeparacao> ordens = repository.findAll();
         assertFalse(ordens.isEmpty());

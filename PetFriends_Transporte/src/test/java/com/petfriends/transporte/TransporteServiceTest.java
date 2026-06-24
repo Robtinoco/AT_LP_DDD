@@ -1,5 +1,6 @@
 package com.petfriends.transporte;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.petfriends.transporte.domain.*;
 import com.petfriends.transporte.infra.*;
 import org.junit.jupiter.api.Test;
@@ -20,8 +21,11 @@ class TransporteServiceTest {
     @Autowired
     private EntregaRepository repository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
-    void processarEventoEntregaSolicitadaTest() {
+    void processarEventoEntregaSolicitadaTest() throws Exception {
         EntregaSolicitadaEvent event = new EntregaSolicitadaEvent();
         event.setEventId("evt-456");
         event.setCorrelationId("corr-456");
@@ -38,8 +42,8 @@ class TransporteServiceTest {
         endereco.setCep("01000-000");
         event.setEnderecoEntrega(endereco);
 
-        // Chama o consumer diretamente (bypass RabbitMQ)
-        consumer.handle(event);
+        String json = objectMapper.writeValueAsString(event);
+        consumer.handle(json);
 
         List<Entrega> entregas = repository.findAll();
         assertFalse(entregas.isEmpty());

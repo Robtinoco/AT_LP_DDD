@@ -1,0 +1,11 @@
+### 1. Publicar Pedido Em Preparação (Almoxarifado)
+POST http://localhost:8080/pedidos/publicar-em-preparacao
+
+### 2. Verificar Ordens de Separação (Almoxarifado)
+GET http://localhost:8081/almoxarifado/ordens-separacao
+
+### 3. Publicar Entrega Solicitada (Transporte)
+POST http://localhost:8080/pedidos/publicar-entrega-solicitada
+
+### 4. Verificar Entregas Agendadas (Transporte)
+GET http://localhost:8082/transporte/entregas

@@ -2,14 +2,7 @@ package com.petfriends.pedidos.events;
 
 import java.time.LocalDateTime;
 
-/**
- * Evento de domínio publicado pelo PetFriends_Pedidos quando a entrega de um
- * pedido é solicitada (pedido despachado pelo almoxarifado). É consumido pelo
- * PetFriends_Transporte.
- *
- * Exchange : petfriends.pedidos.exchange  (Topic)
- * Routing Key: pedido.entrega-solicitada
- */
+
 public class EntregaSolicitadaEvent {
 
     private String eventId;

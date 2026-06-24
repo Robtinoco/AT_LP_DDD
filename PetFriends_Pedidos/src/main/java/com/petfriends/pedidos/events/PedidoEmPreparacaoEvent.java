@@ -3,13 +3,7 @@ package com.petfriends.pedidos.events;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Evento de domínio publicado pelo PetFriends_Pedidos quando um pedido entra
- * no estado EM_PREPARACAO. É consumido pelo PetFriends_Almoxarifado.
- *
- * Exchange : petfriends.pedidos.exchange  (Topic)
- * Routing Key: pedido.em-preparacao
- */
+
 public class PedidoEmPreparacaoEvent {
 
     private String eventId;
